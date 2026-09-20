@@ -1,0 +1,487 @@
+// ===================================
+// СЛОЙ ХРАНЕНИЯ ДАННЫХ
+// Работает с localStorage (гость) или Firestore (авторизован)
+// ===================================
+
+import { isFirebaseConfigured } from './firebase-config.js';
+
+// Глобальные переменные для Firebase
+let firestore = null;
+let auth = null;
+let isFirebaseInitialized = false;
+
+/**
+ * Инициализация Firebase (вызывается из auth.js)
+ */
+export function initializeFirebase(firestoreInstance, authInstance) {
+    firestore = firestoreInstance;
+    auth = authInstance;
+    isFirebaseInitialized = true;
+}
+
+/**
+ * Проверка доступности Firestore
+ */
+function isFirestoreAvailable() {
+    return isFirebaseInitialized && firestore && auth && auth.currentUser;
+}
+
+/**
+ * Показ тост-уведомления
+ */
+function showToast(message, type = 'info') {
+    // Создаём простое тост-уведомление
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3'};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        animation: slideIn 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ===================================
+// ЗАКЛАДКИ
+// ===================================
+
+/**
+ * Получить все закладки
+ */
+export async function getBookmarks() {
+    if (isFirestoreAvailable()) {
+        try {
+            const { collection, query, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const uid = auth.currentUser.uid;
+            const bookmarksRef = collection(firestore, 'users', uid, 'bookmarks');
+            const snapshot = await getDocs(bookmarksRef);
+            return snapshot.docs.map(doc => parseInt(doc.id));
+        } catch (error) {
+            console.error('Ошибка загрузки закладок из Firestore:', error);
+            // Фолбэк на localStorage
+            return getBookmarksFromLocalStorage();
+        }
+    }
+    return getBookmarksFromLocalStorage();
+}
+
+function getBookmarksFromLocalStorage() {
+    const data = localStorage.getItem('manga_bookmarks');
+    return data ? JSON.parse(data) : [];
+}
+
+/**
+ * Добавить/удалить закладку
+ */
+export async function toggleBookmark(mangaId) {
+    const bookmarks = await getBookmarks();
+    const isBookmarked = bookmarks.includes(mangaId);
+
+    if (isFirestoreAvailable()) {
+        try {
+            const { doc, setDoc, deleteDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const uid = auth.currentUser.uid;
+            const bookmarkRef = doc(firestore, 'users', uid, 'bookmarks', mangaId.toString());
+
+            if (isBookmarked) {
+                await deleteDoc(bookmarkRef);
+            } else {
+                await setDoc(bookmarkRef, { addedAt: serverTimestamp() });
+            }
+            return !isBookmarked;
+        } catch (error) {
+            console.error('Ошибка сохранения закладки в Firestore:', error);
+            showToast('Не удалось сохранить закладку', 'error');
+            // Фолбэк на localStorage
+            return toggleBookmarkInLocalStorage(mangaId, bookmarks, isBookmarked);
+        }
+    }
+    return toggleBookmarkInLocalStorage(mangaId, bookmarks, isBookmarked);
+}
+
+function toggleBookmarkInLocalStorage(mangaId, bookmarks, isBookmarked) {
+    if (isBookmarked) {
+        bookmarks = bookmarks.filter(id => id !== mangaId);
+    } else {
+        bookmarks.push(mangaId);
+    }
+    localStorage.setItem('manga_bookmarks', JSON.stringify(bookmarks));
+    return !isBookmarked;
+}
+
+/**
+ * Проверить, в закладках ли манга
+ */
+export async function isBookmarked(mangaId) {
+    const bookmarks = await getBookmarks();
+    return bookmarks.includes(mangaId);
+}
+
+// ===================================
+// ПРОГРЕСС ЧТЕНИЯ
+// ===================================
+
+/**
+ * Получить весь прогресс чтения
+ */
+export async function getReadingProgress() {
+    if (isFirestoreAvailable()) {
+        try {
+            const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const uid = auth.currentUser.uid;
+            const readingRef = collection(firestore, 'users', uid, 'reading');
+            const snapshot = await getDocs(readingRef);
+
+            const progress = {};
+            snapshot.docs.forEach(doc => {
+                progress[doc.id] = doc.data();
+            });
+            return progress;
+        } catch (error) {
+            console.error('Ошибка загрузки прогресса из Firestore:', error);
+            return getReadingProgressFromLocalStorage();
+        }
+    }
+    return getReadingProgressFromLocalStorage();
+}
+
+function getReadingProgressFromLocalStorage() {
+    const data = localStorage.getItem('manga_reading_progress');
+    return data ? JSON.parse(data) : {};
+}
+
+/**
+ * Получить прогресс для конкретной манги
+ */
+export async function getProgress(mangaId) {
+    const allProgress = await getReadingProgress();
+    return allProgress[mangaId] || null;
+}
+
+/**
+ * Установить прогресс чтения
+ */
+export async function setProgress(mangaId, chapter) {
+    if (isFirestoreAvailable()) {
+        try {
+            const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const uid = auth.currentUser.uid;
+            const progressRef = doc(firestore, 'users', uid, 'reading', mangaId.toString());
+
+            await setDoc(progressRef, {
+                chapter: chapter,
+                updatedAt: serverTimestamp()
+            });
+            return true;
+        } catch (error) {
+            console.error('Ошибка сохранения прогресса в Firestore:', error);
+            showToast('Не удалось сохранить прогресс', 'error');
+            return setProgressInLocalStorage(mangaId, chapter);
+        }
+    }
+    return setProgressInLocalStorage(mangaId, chapter);
+}
+
+function setProgressInLocalStorage(mangaId, chapter) {
+    const progress = getReadingProgressFromLocalStorage();
+    progress[mangaId] = { chapter, date: new Date().toISOString() };
+    localStorage.setItem('manga_reading_progress', JSON.stringify(progress));
+    return true;
+}
+
+// ===================================
+// ОТЗЫВЫ
+// ===================================
+
+/**
+ * Получить отзывы пользователя
+ */
+export async function getUserReviews() {
+    if (isFirestoreAvailable()) {
+        try {
+            const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const uid = auth.currentUser.uid;
+            const reviewsRef = collection(firestore, 'users', uid, 'reviews');
+            const q = query(reviewsRef, orderBy('createdAt', 'desc'));
+            const snapshot = await getDocs(q);
+
+            return snapshot.docs.map(doc => ({
+                mangaId: parseInt(doc.id),
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error('Ошибка загрузки отзывов из Firestore:', error);
+            return getUserReviewsFromLocalStorage();
+        }
+    }
+    return getUserReviewsFromLocalStorage();
+}
+
+function getUserReviewsFromLocalStorage() {
+    const data = localStorage.getItem('manga_user_reviews');
+    return data ? JSON.parse(data) : [];
+}
+
+/**
+ * Получить публичные отзывы для манги
+ */
+export async function getPublicReviews(mangaId) {
+    if (isFirestoreAvailable()) {
+        try {
+            const { collection, getDocs, query, orderBy, limit } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const reviewsRef = collection(firestore, 'reviews', mangaId.toString(), 'items');
+            const q = query(reviewsRef, orderBy('createdAt', 'desc'), limit(50));
+            const snapshot = await getDocs(q);
+
+            return snapshot.docs.map(doc => ({
+                uid: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error('Ошибка загрузки публичных отзывов:', error);
+            return [];
+        }
+    }
+    return [];
+}
+
+/**
+ * Добавить отзыв
+ */
+export async function addReview(mangaId, rating, text) {
+    if (isFirestoreAvailable()) {
+        try {
+            const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const uid = auth.currentUser.uid;
+            const user = auth.currentUser;
+
+            const reviewData = {
+                rating,
+                text,
+                createdAt: serverTimestamp()
+            };
+
+            // Сохраняем в личные отзывы пользователя
+            const userReviewRef = doc(firestore, 'users', uid, 'reviews', mangaId.toString());
+            await setDoc(userReviewRef, reviewData);
+
+            // Сохраняем в публичные отзывы
+            const publicReviewRef = doc(firestore, 'reviews', mangaId.toString(), 'items', uid);
+            await setDoc(publicReviewRef, {
+                ...reviewData,
+                authorName: user.displayName || 'Аноним',
+                photoURL: user.photoURL || null
+            });
+
+            showToast('Отзыв опубликован!', 'success');
+            return true;
+        } catch (error) {
+            console.error('Ошибка сохранения отзыва в Firestore:', error);
+            showToast('Не удалось опубликовать отзыв', 'error');
+            return addReviewToLocalStorage(mangaId, rating, text);
+        }
+    }
+    return addReviewToLocalStorage(mangaId, rating, text);
+}
+
+function addReviewToLocalStorage(mangaId, rating, text) {
+    const reviews = getUserReviewsFromLocalStorage();
+    reviews.push({
+        id: Date.now(),
+        mangaId,
+        rating,
+        text,
+        date: new Date().toISOString()
+    });
+    localStorage.setItem('manga_user_reviews', JSON.stringify(reviews));
+    showToast('Отзыв сохранён локально', 'success');
+    return true;
+}
+
+// ===================================
+// НАСТРОЙКИ
+// ===================================
+
+/**
+ * Получить настройки пользователя
+ */
+export async function getSettings() {
+    if (isFirestoreAvailable()) {
+        try {
+            const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const uid = auth.currentUser.uid;
+            const userRef = doc(firestore, 'users', uid);
+            const snapshot = await getDoc(userRef);
+
+            if (snapshot.exists()) {
+                return snapshot.data().settings || getDefaultSettings();
+            }
+            return getDefaultSettings();
+        } catch (error) {
+            console.error('Ошибка загрузки настроек из Firestore:', error);
+            return getSettingsFromLocalStorage();
+        }
+    }
+    return getSettingsFromLocalStorage();
+}
+
+function getSettingsFromLocalStorage() {
+    const data = localStorage.getItem('manga_settings');
+    return data ? JSON.parse(data) : getDefaultSettings();
+}
+
+function getDefaultSettings() {
+    return {
+        theme: 'auto',
+        notifications: true,
+        viewMode: 'grid'
+    };
+}
+
+/**
+ * Сохранить настройки
+ */
+export async function setSettings(settings) {
+    if (isFirestoreAvailable()) {
+        try {
+            const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+            const uid = auth.currentUser.uid;
+            const userRef = doc(firestore, 'users', uid);
+
+            await updateDoc(userRef, { settings });
+            showToast('Настройки сохранены', 'success');
+            return true;
+        } catch (error) {
+            console.error('Ошибка сохранения настроек в Firestore:', error);
+            showToast('Не удалось сохранить настройки', 'error');
+            return setSettingsInLocalStorage(settings);
+        }
+    }
+    return setSettingsInLocalStorage(settings);
+}
+
+function setSettingsInLocalStorage(settings) {
+    localStorage.setItem('manga_settings', JSON.stringify(settings));
+    return true;
+}
+
+// ===================================
+// МИГРАЦИЯ ДАННЫХ
+// ===================================
+
+/**
+ * Проверить наличие локальных данных
+ */
+export function hasLocalData() {
+    const bookmarks = localStorage.getItem('manga_bookmarks');
+    const progress = localStorage.getItem('manga_reading_progress');
+    const reviews = localStorage.getItem('manga_user_reviews');
+
+    return !!(bookmarks || progress || reviews);
+}
+
+/**
+ * Мигрировать данные из localStorage в Firestore
+ */
+export async function migrateLocalDataToFirestore() {
+    if (!isFirestoreAvailable()) {
+        console.error('Firestore недоступен для миграции');
+        return false;
+    }
+
+    try {
+        const { doc, setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+        const uid = auth.currentUser.uid;
+
+        // Миграция закладок
+        const localBookmarks = getBookmarksFromLocalStorage();
+        for (const mangaId of localBookmarks) {
+            const bookmarkRef = doc(firestore, 'users', uid, 'bookmarks', mangaId.toString());
+            await setDoc(bookmarkRef, { addedAt: serverTimestamp() });
+        }
+
+        // Миграция прогресса
+        const localProgress = getReadingProgressFromLocalStorage();
+        for (const [mangaId, data] of Object.entries(localProgress)) {
+            const progressRef = doc(firestore, 'users', uid, 'reading', mangaId);
+            await setDoc(progressRef, {
+                chapter: data.chapter,
+                updatedAt: serverTimestamp()
+            });
+        }
+
+        // Миграция отзывов
+        const localReviews = getUserReviewsFromLocalStorage();
+        const user = auth.currentUser;
+
+        for (const review of localReviews) {
+            const userReviewRef = doc(firestore, 'users', uid, 'reviews', review.mangaId.toString());
+            await setDoc(userReviewRef, {
+                rating: review.rating,
+                text: review.text,
+                createdAt: serverTimestamp()
+            });
+
+            const publicReviewRef = doc(firestore, 'reviews', review.mangaId.toString(), 'items', uid);
+            await setDoc(publicReviewRef, {
+                rating: review.rating,
+                text: review.text,
+                authorName: user.displayName || 'Аноним',
+                photoURL: user.photoURL || null,
+                createdAt: serverTimestamp()
+            });
+        }
+
+        // Очищаем локальные данные после успешной миграции
+        localStorage.removeItem('manga_bookmarks');
+        localStorage.removeItem('manga_reading_progress');
+        localStorage.removeItem('manga_user_reviews');
+
+        showToast('Данные успешно перенесены в ваш аккаунт!', 'success');
+        return true;
+    } catch (error) {
+        console.error('Ошибка миграции данных:', error);
+        showToast('Не удалось перенести все данные', 'error');
+        return false;
+    }
+}
+
+/**
+ * Предложить миграцию данных при первом входе
+ */
+export async function offerDataMigration() {
+    if (!hasLocalData() || !isFirestoreAvailable()) {
+        return;
+    }
+
+    // Проверяем, не мигрировали ли мы уже данные
+    const migrated = localStorage.getItem('data_migrated');
+    if (migrated) return;
+
+    const shouldMigrate = confirm(
+        'У вас есть сохранённые данные в гостевом режиме (закладки, прогресс чтения, отзывы). ' +
+        'Хотите перенести их в ваш аккаунт Google?'
+    );
+
+    if (shouldMigrate) {
+        const success = await migrateLocalDataToFirestore();
+        if (success) {
+            localStorage.setItem('data_migrated', 'true');
+        }
+    } else {
+        localStorage.setItem('data_migrated', 'skipped');
+    }
+}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Ваш профиль - закладки, история чтения, отзывы и настройки">
+    <meta name="keywords" content="профиль пользователя, закладки манги, история чтения">
+    <title>Мой профиль - MangaHub</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/additional-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <div class="nav-brand">
+                <a href="./index.html" class="logo">
+                    <span class="logo-icon">📚</span>
+                    <span class="logo-text">MangaHub</span>
+                </a>
+            </div>
+
+            <div class="nav-search">
+                <input type="search" id="searchInput" placeholder="Поиск..." class="search-input">
+                <button class="search-btn" aria-label="Искать">🔍</button>
+            </div>
+
+            <ul class="nav-menu">
+                <li><a href="./index.html" class="nav-link">Главная</a></li>
+                <li><a href="./catalog.html" class="nav-link">Каталог</a></li>
+                <li><a href="./news.html" class="nav-link">Новости</a></li>
+                <li><a href="./profile.html" class="nav-link active">Профиль</a></li>
+                <li>
+                    <button id="themeToggle" class="theme-toggle" aria-label="Переключить тему">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </li>
+                <li id="authButton"></li>
+            </ul>
+
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="profile-page">
+        <div class="container">
+            <div class="profile-header" id="profileHeader">
+                <!-- Рендерится через JS -->
+            </div>
+
+            <div class="profile-tabs">
+                <button class="tab-btn active" data-tab="bookmarks">
+                    📚 Закладки
+                </button>
+                <button class="tab-btn" data-tab="reading">
+                    📖 Читаю сейчас
+                </button>
+                <button class="tab-btn" data-tab="reviews">
+                    ✍️ Мои отзывы
+                </button>
+                <button class="tab-btn" data-tab="settings">
+                    ⚙️ Настройки
+                </button>
+            </div>
+
+            <div class="tab-content active" id="bookmarksTab">
+                <div class="manga-grid" id="bookmarksGrid">
+                    <!-- Рендерится через JS -->
+                </div>
+            </div>
+
+            <div class="tab-content" id="readingTab">
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;" id="readingList">
+                    <!-- Рендерится через JS -->
+                </div>
+            </div>
+
+            <div class="tab-content" id="reviewsTab">
+                <div class="reviews-list" id="userReviewsList">
+                    <!-- Рендерится через JS -->
+                </div>
+            </div>
+
+            <div class="tab-content" id="settingsTab">
+                <div class="manga-section" style="max-width: 800px;">
+                    <div id="settingsForm">
+                        <!-- Рендерится через JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 MangaHub. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="./js/app.js"></script>
+    <script type="module" src="./js/profile.js"></script>
+</body>
+</html>

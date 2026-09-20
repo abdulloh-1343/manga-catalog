@@ -1,0 +1,85 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===================================
+    // ФУНКЦИИ ВАЛИДАЦИИ
+    // ===================================
+
+    // Проверка, что пользователь авторизован
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Проверка, что пользователь — владелец документа
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Валидация рейтинга (1-5)
+    function isValidRating() {
+      return request.resource.data.rating is int &&
+             request.resource.data.rating >= 1 &&
+             request.resource.data.rating <= 5;
+    }
+
+    // Валидация текста отзыва (не пустой, макс 5000 символов)
+    function isValidReviewText() {
+      return request.resource.data.text is string &&
+             request.resource.data.text.size() > 0 &&
+             request.resource.data.text.size() <= 5000;
+    }
+
+    // ===================================
+    // ПРАВИЛА ДОСТУПА
+    // ===================================
+
+    // Профили пользователей
+    match /users/{uid} {
+      // Чтение и запись только своего профиля
+      allow read, write: if isOwner(uid);
+
+      // Закладки пользователя
+      match /bookmarks/{mangaId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Прогресс чтения пользователя
+      match /reading/{mangaId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Личные отзывы пользователя
+      match /reviews/{mangaId} {
+        allow read, write: if isOwner(uid);
+
+        // Валидация при создании/обновлении отзыва
+        allow create, update: if isOwner(uid) &&
+                                 isValidRating() &&
+                                 isValidReviewText();
+      }
+    }
+
+    // Публичные отзывы (коллекция для отображения на страницах манги)
+    match /reviews/{mangaId}/items/{uid} {
+      // Чтение доступно всем
+      allow read: if true;
+
+      // Создание и обновление только своего отзыва
+      allow create, update: if isSignedIn() &&
+                               request.auth.uid == uid &&
+                               isValidRating() &&
+                               isValidReviewText() &&
+                               request.resource.data.authorName is string &&
+                               request.resource.data.authorName.size() > 0;
+
+      // Удаление только своего отзыва
+      allow delete: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Запрет доступа ко всем остальным коллекциям
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Каталог манги - найдите свою идеальную историю с помощью удобных фильтров по жанрам, авторам и годам">
+    <meta name="keywords" content="каталог манги, поиск манги, фильтр по жанрам, сортировка манги">
+    <title>Каталог манги - MangaHub</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/additional-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <div class="nav-brand">
+                <a href="./index.html" class="logo">
+                    <span class="logo-icon">📚</span>
+                    <span class="logo-text">MangaHub</span>
+                </a>
+            </div>
+
+            <div class="nav-search">
+                <input type="search" id="searchInput" placeholder="Поиск..." class="search-input">
+                <button class="search-btn" aria-label="Искать">🔍</button>
+            </div>
+
+            <ul class="nav-menu">
+                <li><a href="./index.html" class="nav-link">Главная</a></li>
+                <li><a href="./catalog.html" class="nav-link active">Каталог</a></li>
+                <li><a href="./news.html" class="nav-link">Новости</a></li>
+                <li><a href="./profile.html" class="nav-link">Профиль</a></li>
+                <li>
+                    <button id="themeToggle" class="theme-toggle" aria-label="Переключить тему">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </li>
+                <li id="authButton"></li>
+            </ul>
+
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="catalog-page">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">Каталог манги</h1>
+                <p class="page-subtitle">Найдено: <span id="resultCount">0</span> тайтлов</p>
+            </div>
+
+            <div class="catalog-layout">
+                <aside class="filters-sidebar">
+                    <div class="filters-header">
+                        <h2 class="filters-title">Фильтры</h2>
+                        <button class="filters-reset" id="resetFilters">Сбросить</button>
+                    </div>
+
+                    <div class="filter-group">
+                        <h3 class="filter-title">Жанры</h3>
+                        <div class="filter-options" id="genreFilters"></div>
+                    </div>
+
+                    <div class="filter-group">
+                        <h3 class="filter-title">Год выпуска</h3>
+                        <div class="filter-range">
+                            <input type="number" id="yearFrom" placeholder="От" min="1950" max="2026" class="filter-input">
+                            <span>—</span>
+                            <input type="number" id="yearTo" placeholder="До" min="1950" max="2026" class="filter-input">
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <h3 class="filter-title">Статус</h3>
+                        <div class="filter-options">
+                            <label class="filter-checkbox">
+                                <input type="checkbox" name="status" value="ongoing">
+                                <span>Онгоинг</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" name="status" value="completed">
+                                <span>Завершена</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" name="status" value="hiatus">
+                                <span>На паузе</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <h3 class="filter-title">Рейтинг</h3>
+                        <div class="filter-options">
+                            <label class="filter-checkbox">
+                                <input type="checkbox" name="rating" value="9">
+                                <span>⭐ 9+ отлично</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" name="rating" value="8">
+                                <span>⭐ 8+ хорошо</span>
+                            </label>
+                            <label class="filter-checkbox">
+                                <input type="checkbox" name="rating" value="7">
+                                <span>⭐ 7+ нормально</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" id="applyFilters">Применить фильтры</button>
+                </aside>
+
+                <div class="catalog-content">
+                    <div class="catalog-controls">
+                        <div class="sort-controls">
+                            <label for="sortSelect">Сортировка:</label>
+                            <select id="sortSelect" class="sort-select">
+                                <option value="popular">По популярности</option>
+                                <option value="rating">По рейтингу</option>
+                                <option value="latest">Последние обновления</option>
+                                <option value="newest">Новинки</option>
+                                <option value="title">По названию (А-Я)</option>
+                                <option value="year">По году (новые)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="manga-grid" id="catalogResults"></div>
+
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 MangaHub. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="./js/catalog.js"></script>
+</body>
+</html>

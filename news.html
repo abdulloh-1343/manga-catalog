@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Последние новости индустрии манги, релизы и события">
+    <meta name="keywords" content="новости манги, релизы манги, индустрия манги, аниме события">
+    <title>Новости индустрии - MangaHub</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/additional-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav container">
+            <div class="nav-brand">
+                <a href="./index.html" class="logo">
+                    <span class="logo-icon">📚</span>
+                    <span class="logo-text">MangaHub</span>
+                </a>
+            </div>
+
+            <div class="nav-search">
+                <input type="search" id="searchInput" placeholder="Поиск..." class="search-input">
+                <button class="search-btn" aria-label="Искать">🔍</button>
+            </div>
+
+            <ul class="nav-menu">
+                <li><a href="./index.html" class="nav-link">Главная</a></li>
+                <li><a href="./catalog.html" class="nav-link">Каталог</a></li>
+                <li><a href="./news.html" class="nav-link active">Новости</a></li>
+                <li><a href="./profile.html" class="nav-link">Профиль</a></li>
+                <li>
+                    <button id="themeToggle" class="theme-toggle" aria-label="Переключить тему">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </li>
+                <li id="authButton"></li>
+            </ul>
+
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="section">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">Новости индустрии</h1>
+                <p class="page-subtitle">Последние события и анонсы из мира манги</p>
+            </div>
+
+            <div class="news-layout">
+                <div class="news-grid" id="newsGrid">
+                    <!-- Рендерится через JS -->
+                </div>
+
+                <aside class="filters-sidebar">
+                    <div class="filters-header">
+                        <h2 class="filters-title">Категории</h2>
+                    </div>
+                    <div id="categoryFilters" class="category-list">
+                        <!-- Рендерится через JS -->
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2026 MangaHub. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="./js/app.js"></script>
+    <script type="module" src="./js/news.js"></script>
+</body>
+</html>
