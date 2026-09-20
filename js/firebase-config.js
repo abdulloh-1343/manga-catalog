@@ -18,12 +18,12 @@
  */
 
 export const firebaseConfig = {
-    apiKey: "YOUR_API_KEY_HERE",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyClwEuEja7Kxbw6e95AmKD7KJh_zgvPwq0",
+    authDomain: "manga-catalog-2ed18.firebaseapp.com",
+    projectId: "manga-catalog-2ed18",
+    storageBucket: "manga-catalog-2ed18.firebasestorage.app",
+    messagingSenderId: "676771760345",
+    appId: "1:676771760345:web:c8c80b6a8eff161e6256c8"
 };
 
 /**
