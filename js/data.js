@@ -297,8 +297,8 @@ function searchManga(query) {
 }
 
 // Фильтрация манги
-function filterManga(filters) {
-    let results = [...MANGA_DATA.manga];
+function filterManga(filters, manga = MANGA_DATA.manga) {
+    let results = [...manga];
 
     if (filters.genres && filters.genres.length > 0) {
         results = results.filter(manga =>

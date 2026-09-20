@@ -169,8 +169,8 @@ function renderCatalog() {
     const searchQuery = document.getElementById('searchInput')?.value.trim();
     let results = searchQuery ? searchManga(searchQuery) : [...MANGA_DATA.manga];
 
-    // Применяем фильтры
-    results = filterManga(currentFilters);
+    // Применяем фильтры к результатам поиска
+    results = filterManga(currentFilters, results);
 
     // Применяем сортировку
     results = sortManga(results, currentSort);
