@@ -378,16 +378,14 @@ function getRecommendations(basedOn = null, limit = 4) {
         .slice(0, limit);
 }
 
-// Экспорт для использования в других модулях
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        MANGA_DATA,
-        Utils,
-        generateChapters,
-        searchManga,
-        filterManga,
-        sortManga,
-        getRecommendations,
-        generateGradientFromTitle
-    };
-}
+// Экспорт для ES6 модулей (браузеры)
+export {
+    MANGA_DATA,
+    Utils,
+    generateChapters,
+    searchManga,
+    filterManga,
+    sortManga,
+    getRecommendations,
+    generateGradientFromTitle
+};
